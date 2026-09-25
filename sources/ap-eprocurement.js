@@ -41,13 +41,13 @@ function buildJsonUrl() {
 async function run() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1400, height: 1100 } });
-  page.setDefaultTimeout(30000);
+  page.setDefaultTimeout(60000); // GitHub Actions' runners see noticeably higher latency to this portal than a machine on an Indian ISP
 
   let itemCount = 0;
   const opportunities = [];
 
   try {
-    await page.goto(BASE_URL, { waitUntil: 'load' });
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForTimeout(1500);
     await page.evaluate(() => { const s = document.getElementById('splash'); if (s) s.remove(); });
     await page.waitForTimeout(500);

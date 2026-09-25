@@ -48,13 +48,13 @@ function parseDate(ddmmyyyy) {
 async function run() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1400, height: 1300 } });
-  page.setDefaultTimeout(45000);
+  page.setDefaultTimeout(75000); // GitHub Actions' runners see noticeably higher latency to this portal than a machine on an Indian ISP
 
   let itemCount = 0;
   const opportunities = [];
 
   try {
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 75000 });
     await page.waitForTimeout(2500);
 
     for (let p = 0; p < PAGES_TO_SCAN; p++) {
