@@ -1,9 +1,15 @@
-name: Daily opportunities scan
+name: Daily opportunities scan (Telangana)
+
+# Only runs telangana_eprocurement. ap_eprocurement and aprera stay on the
+# local Windows Task Scheduler (run-daily.bat) — a raw curl diagnostic from
+# this runner confirmed AP's government servers silently drop connections
+# from GitHub's IP ranges (TCP handshake never completes), while Telangana's
+# server responds normally. See run-all.js's header comment for the full story.
 
 on:
   schedule:
     # 01:30 UTC = 07:00 IST — same time the cf-worker cron runs the two
-    # cloud-native sources (NSE, Google News), so all 5 sources land together.
+    # cloud-native sources (NSE, Google News), so all sources land together.
     - cron: "30 1 * * *"
   workflow_dispatch: {} # lets us trigger a run manually from the Actions tab
 
@@ -23,17 +29,8 @@ jobs:
       - name: Install Playwright's Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Diagnose connectivity to AP government sites
-        run: |
-          echo "--- tender.apeprocurement.gov.in ---"
-          curl -v --max-time 20 -o /dev/null https://tender.apeprocurement.gov.in/login.html || true
-          echo "--- rera.ap.gov.in ---"
-          curl -v --max-time 20 -o /dev/null https://rera.ap.gov.in/RERA/Views/Reports/ApprovedProjects.aspx || true
-          echo "--- tender.telangana.gov.in (control — known to work) ---"
-          curl -v --max-time 20 -o /dev/null https://tender.telangana.gov.in/login.html || true
-
-      - name: Run scrapers
+      - name: Run scraper
         env:
           CSOFT_API_BASE: ${{ secrets.CSOFT_API_BASE }}
           CSOFT_ADMIN_TOKEN: ${{ secrets.CSOFT_ADMIN_TOKEN }}
-        run: node run-all.js
+        run: node run-all.js telangana_eprocurement
