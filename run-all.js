@@ -26,6 +26,11 @@ const ALL_SOURCES = [
   { name: 'aprera', run: require('./sources/aprera').run },
 ];
 
+const MAX_ATTEMPTS = 2; // a transient blip (a slow response, a one-off hiccup) gets one retry within the same run
+const RETRY_DELAY_MS = 10000;
+
+function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
 async function runAll(names) {
   const sources = names && names.length ? ALL_SOURCES.filter((s) => names.includes(s.name)) : ALL_SOURCES;
   const started = new Date().toISOString();
@@ -34,12 +39,28 @@ async function runAll(names) {
   const results = [];
   for (const source of sources) {
     console.log(`\n[run-all] --- ${source.name} ---`);
-    try {
-      const result = await source.run();
+    let result, lastError;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        result = await source.run();
+        lastError = result && result.error ? new Error(result.error) : null;
+      } catch (err) {
+        lastError = err;
+      }
+
+      if (!lastError) break; // success — leave it here, don't touch the other sources' results
+      if (attempt < MAX_ATTEMPTS) {
+        console.log(`[run-all] ${source.name} failed on attempt ${attempt} (${lastError.message}) — retrying in ${RETRY_DELAY_MS / 1000}s...`);
+        await sleep(RETRY_DELAY_MS);
+      }
+    }
+
+    if (lastError) {
+      console.error(`[run-all] ${source.name} failed after ${MAX_ATTEMPTS} attempts:`, lastError.message);
+      results.push({ source: source.name, error: lastError.message });
+    } else {
       results.push({ source: source.name, ...result });
-    } catch (err) {
-      console.error(`[run-all] ${source.name} threw unexpectedly:`, err.message);
-      results.push({ source: source.name, error: err.message });
     }
   }
 
