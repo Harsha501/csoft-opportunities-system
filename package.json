@@ -1,0 +1,12 @@
+{
+  "name": "csoft-opportunities-system",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Daily scrapers for government tender/project leads that need a real headless browser (AP/Telangana eProcurement, APRERA). Runs via GitHub Actions — see .github/workflows/daily-scan.yml.",
+  "scripts": {
+    "scan": "node run-all.js"
+  },
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

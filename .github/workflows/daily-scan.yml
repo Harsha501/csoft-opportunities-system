@@ -1,0 +1,30 @@
+name: Daily opportunities scan
+
+on:
+  schedule:
+    # 01:30 UTC = 07:00 IST — same time the cf-worker cron runs the two
+    # cloud-native sources (NSE, Google News), so all 5 sources land together.
+    - cron: "30 1 * * *"
+  workflow_dispatch: {} # lets us trigger a run manually from the Actions tab
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run scrapers
+        env:
+          CSOFT_API_BASE: ${{ secrets.CSOFT_API_BASE }}
+          CSOFT_ADMIN_TOKEN: ${{ secrets.CSOFT_ADMIN_TOKEN }}
+        run: node run-all.js
